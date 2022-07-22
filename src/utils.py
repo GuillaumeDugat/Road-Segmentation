@@ -21,12 +21,12 @@ def load_image(path):
 
 # Returns all images from the given path in a numpy array.
 def load_images(path):
-    return np.array([load_image(fn) for fn in sorted(glob(path + '/*.png'))])
+    return np.array([load_image(fn) for fn in sorted(glob(os.path.join(path, "*.png")))])
 
 
 # Returns all images from the given path as PIL images.
 def load_pil_images(path):
-    return [Image.open(fn) for fn in sorted(glob(path + '/*.png'))]
+    return [Image.open(fn) for fn in sorted(glob(os.path.join(path, "*.png")))]
 
 
 # Plots all images from the given array of images.
