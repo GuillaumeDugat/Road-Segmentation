@@ -58,10 +58,17 @@ def plot_predictions(preds, images_per_row=6):
 
 # Creates submission file with the given labels and test image filenames.
 def create_submission(labels, test_filenames, submission_filename):
-    with open(submission_filename, 'w') as f:
+    # create directory for submissions
+    os.makedirs("submissions", exist_ok=True)
+
+    path = os.path.join("submissions", submission_filename)
+
+    with open(path, 'w') as f:
         f.write('id,prediction\n')
         for fn, patch_array in zip(test_filenames, labels):
             img_number = int(re.search(r"\d+", fn).group(0))
             for i in range(patch_array.shape[0]):
                 for j in range(patch_array.shape[1]):
                     f.write("{:03d}_{}_{},{}\n".format(img_number, j * 16, i * 16, int(patch_array[i, j])))
+    
+    print(f"Created submission file: {path}")

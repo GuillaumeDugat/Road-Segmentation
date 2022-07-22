@@ -131,3 +131,6 @@ dmypy.json
 # datasets
 training/
 test/
+
+# submissions
+submissions/

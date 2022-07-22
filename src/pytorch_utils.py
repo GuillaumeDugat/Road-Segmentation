@@ -237,7 +237,7 @@ def predict_on_test_set(model, implicit_class_labels=None, submission_fn='submis
                            # that's because the BCEWithLogitsLoss already applies the sigmoid function internally
                            
     test_pred = []
-    for i in range(test_fns):
+    for i in range(len(test_fns)):
         if use_specialized_models:
             pred = model[implicit_class_labels[i]](test_images[i].unsqueeze(0))
         else:
@@ -253,7 +253,5 @@ def predict_on_test_set(model, implicit_class_labels=None, submission_fn='submis
     labels = np.moveaxis(labels, 2, 3)
     labels = np.round(np.mean(labels, (-1, -2)) > CUTOFF)
     create_submission(labels, test_fns, submission_filename=submission_fn)
-
-    print(f"Created submission file: {submission_fn}")
 
     return test_pred
