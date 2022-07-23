@@ -131,6 +131,10 @@ dmypy.json
 # datasets
 training/
 test/
+training_ext/
 
 # submissions
 submissions/
+
+# implicit class labels
+class_labels/
