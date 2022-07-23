@@ -28,11 +28,12 @@ np.random.seed(0)
 
 # Dataset class that deals with loading the data and making it available by index.
 class ImageDataset(torch.utils.data.Dataset):
-    def __init__(self, image_fns, mask_fns, device, resize_to=(400, 400), normalize=False):
+    def __init__(self, image_fns, mask_fns=None, device='cpu', resize_to=(400, 400), normalize=False):
         self.image_fns = image_fns
         self.mask_fns = mask_fns
         self.device = device
         self.resize_to = resize_to
+        self.resize = (self.resize_to != (400, 400))
         self.normalize = normalize
         self.n_samples = len(image_fns)
 
@@ -51,19 +52,26 @@ class ImageDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, item):
         x = load_image(self.image_fns[item])
-        y = load_image(self.mask_fns[item])
-
-        if self.resize_to != (400, 400):
-            x = cv2.resize(x, dsize=self.resize_to)
-            y = cv2.resize(y, dsize=self.resize_to)
+        
+        if self.resize:
+            x = cv2.resize(x, dsize=self.resize_to)                
         
         if self.normalize:
             x = self._normalize(x) # x is a tensor now with shape (3, H, W)
         else:
             x = TF.to_tensor(x) # this also transorms x to a tensor with shape (3, H, W)
-        y = TF.to_tensor(y)
+        
+        # if training/validation set
+        if self.mask_fns is not None:
+            y = load_image(self.mask_fns[item])
+            if self.resize:
+                y = cv2.resize(y, dsize=self.resize_to)
+            y = TF.to_tensor(y)
 
-        return self._to_device(x), self._to_device(y)
+            return self._to_device(x), self._to_device(y)
+        # if test set:
+        else:
+            return self._to_device(x)
 
     def __len__(self):
         return self.n_samples
@@ -107,7 +115,6 @@ def patch_accuracy_fn(y_hat, y):
     return (patches == patches_hat).float().mean()
 
 
-# metric used on Kaggle for evaluation
 def patch_f1_fn(y_hat, y):
     h_patches = y.shape[-2] // PATCH_SIZE
     w_patches = y.shape[-1] // PATCH_SIZE
@@ -129,13 +136,15 @@ def train_model(
         n_epochs=35,
         batch_size=8,
         resize_shape=(384, 384),
+        normalize=False,
         pos_weight=1.0,  # how much more to weight the positive labels in the masks
+        plot_val_samples=True,
     ):
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    train_dataset = ImageDataset(image_fns_train, mask_fns_train, device, resize_to=resize_shape)
-    val_dataset = ImageDataset(image_fns_val, mask_fns_val, device, resize_to=resize_shape)
+    train_dataset = ImageDataset(image_fns_train, mask_fns=mask_fns_train, device=device, resize_to=resize_shape, normalize=normalize)
+    val_dataset = ImageDataset(image_fns_val, mask_fns=mask_fns_val, device=device, resize_to=resize_shape, normalize=normalize)
 
     print(f"Number of training samples:\t{len(train_dataset)}")
     print(f"Number of validation samples:\t{len(val_dataset)}")
@@ -194,7 +203,9 @@ def train_model(
         history[epoch] = {k: sum(v) / len(v) for k, v in metrics.items()}
 
         print(' '.join(['\t- '+str(k)+' = '+str(v)+'\n ' for (k, v) in history[epoch].items()]))
-        show_val_samples(x.detach().cpu().numpy(), y.detach().cpu().numpy(), y_hat.detach().cpu().numpy())
+
+        if plot_val_samples:
+            show_val_samples(x.detach().cpu().numpy(), y.detach().cpu().numpy(), y_hat.detach().cpu().numpy())
 
     print('Finished Training')
     return history
@@ -212,23 +223,19 @@ def plot_training_history(history, metrics=['loss', 'patch_acc', 'patch_f1']):
 
 # Makes predictions on test set, creates submission file and returns the predicted masks.
 # To predict with multiple models based on implicit class labels, pass a list of models for the 'model' argument.
-def predict_on_test_set(model, implicit_class_labels=None, submission_fn='submission.csv'):
-    def _np_to_tensor(x, device):
-        if device == 'cpu':
-            return torch.from_numpy(x).cpu()
-        else:
-            return torch.from_numpy(x).contiguous().pin_memory().to(device=device, non_blocking=True)
-    
+def predict_on_test_set(
+    model, 
+    implicit_class_labels=None, 
+    resize_shape=(384, 384), 
+    normalize=False,
+    submission_fn='submission.csv',
+    ):
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    # predict on test set
+    model.eval()
     test_fns = sorted(glob(os.path.join("test", "images", "*.png")))
-    test_images = np.stack([np.array(Image.open(fn)) for fn in test_fns]).astype(np.float32) / 255.0
-
-    # we also need to resize the test images. This might not be the best ideas depending on their spatial resolution.
-    test_images = np.stack([cv2.resize(img, dsize=(384, 384)) for img in test_images], 0)
-    test_images = test_images[:, :, :, :3]
-    test_images = _np_to_tensor(np.moveaxis(test_images, -1, 1), device)
+    test_dataset = ImageDataset(test_fns, device=device, resize_to=resize_shape, normalize=normalize)
 
     # whether or not to use multiple models based on implicit class lables
     use_specialized_models = isinstance(model, list) and implicit_class_labels is not None 
@@ -239,9 +246,9 @@ def predict_on_test_set(model, implicit_class_labels=None, submission_fn='submis
     test_pred = []
     for i in range(len(test_fns)):
         if use_specialized_models:
-            pred = model[implicit_class_labels[i]](test_images[i].unsqueeze(0))
+            pred = model[implicit_class_labels[i]](test_dataset[i].unsqueeze(0))
         else:
-            pred = model(test_images[i].unsqueeze(0))
+            pred = model(test_dataset[i].unsqueeze(0))
         test_pred.append(sigmoid(pred).detach().cpu().numpy())
 
     test_pred = np.concatenate(test_pred, 0)
