@@ -211,7 +211,7 @@ def train_model(
     return history
 
     
-def plot_training_history(history, metrics=['loss', 'patch_acc', 'patch_f1']):
+def plot_training_history(history, metrics=['loss', 'patch_f1']):
     for metric in metrics:
         plt.plot([v[metric] for k, v in history.items()], label=f'train_{metric}')
         plt.plot([v[f'val_{metric}'] for k, v in history.items()], label=f'val_{metric}')
