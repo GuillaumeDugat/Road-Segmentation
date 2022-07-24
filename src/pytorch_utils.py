@@ -82,16 +82,29 @@ def show_val_samples(x, y, y_hat, segmentation=False):
     imgs_to_draw = min(5, len(x))
     if x.shape[-2:] == y.shape[-2:]:  # segmentation
         fig, axs = plt.subplots(3, imgs_to_draw, figsize=(18.5, 12))
-        for i in range(imgs_to_draw):
-            axs[0, i].imshow(np.moveaxis(x[i], 0, -1))
-            axs[1, i].imshow(np.concatenate([np.moveaxis(y_hat[i], 0, -1)] * 3, -1))
-            axs[2, i].imshow(np.concatenate([np.moveaxis(y[i], 0, -1)]*3, -1))
-            axs[0, i].set_title(f'Sample {i}')
-            axs[1, i].set_title(f'Predicted {i}')
-            axs[2, i].set_title(f'True {i}')
-            axs[0, i].set_axis_off()
-            axs[1, i].set_axis_off()
-            axs[2, i].set_axis_off()
+
+        if imgs_to_draw > 1:
+            for i in range(imgs_to_draw):
+                axs[0, i].imshow(np.moveaxis(x[i], 0, -1))
+                axs[1, i].imshow(np.concatenate([np.moveaxis(y_hat[i], 0, -1)] * 3, -1))
+                axs[2, i].imshow(np.concatenate([np.moveaxis(y[i], 0, -1)]*3, -1))
+                axs[0, i].set_title(f'Sample {i}')
+                axs[1, i].set_title(f'Predicted {i}')
+                axs[2, i].set_title(f'True {i}')
+                axs[0, i].set_axis_off()
+                axs[1, i].set_axis_off()
+                axs[2, i].set_axis_off()
+        else:
+            for i in range(imgs_to_draw):
+                axs[0].imshow(np.moveaxis(x[i], 0, -1))
+                axs[1].imshow(np.concatenate([np.moveaxis(y_hat[i], 0, -1)] * 3, -1))
+                axs[2].imshow(np.concatenate([np.moveaxis(y[i], 0, -1)]*3, -1))
+                axs[0].set_title(f'Sample {i}')
+                axs[1].set_title(f'Predicted {i}')
+                axs[2].set_title(f'True {i}')
+                axs[0].set_axis_off()
+                axs[1].set_axis_off()
+                axs[2].set_axis_off()
     else:  # classification
         fig, axs = plt.subplots(1, imgs_to_draw, figsize=(18.5, 6))
         for i in range(imgs_to_draw):
@@ -233,12 +246,17 @@ def predict_on_test_set(
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    model.eval()
-    test_fns = sorted(glob(os.path.join("test", "images", "*.png")))
-    test_dataset = ImageDataset(test_fns, device=device, resize_to=resize_shape, normalize=normalize)
-
     # whether or not to use multiple models based on implicit class lables
     use_specialized_models = isinstance(model, list) and implicit_class_labels is not None 
+
+    if use_specialized_models:
+        for m in model:
+            m.eval()
+    else:
+        model.eval()
+
+    test_fns = sorted(glob(os.path.join("test", "images", "*.png")))
+    test_dataset = ImageDataset(test_fns, device=device, resize_to=resize_shape, normalize=normalize)
 
     sigmoid = nn.Sigmoid() # we need to manually apply the sigmoid function because it is not included in the models themselves,
                            # that's because the BCEWithLogitsLoss already applies the sigmoid function internally

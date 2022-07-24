@@ -132,9 +132,13 @@ dmypy.json
 training/
 test/
 training_ext/
+training_ext_classes/
 
 # submissions
 submissions/
 
 # implicit class labels
 class_labels/
+
+# model backups
+model_backups/
