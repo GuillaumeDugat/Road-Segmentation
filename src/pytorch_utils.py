@@ -134,8 +134,8 @@ def train_model(
         image_fns_train, mask_fns_train, 
         image_fns_val, mask_fns_val, 
         n_epochs=35,
-        batch_size=8,
-        resize_shape=(384, 384),
+        batch_size=4,
+        resize_shape=(400, 400),
         normalize=False,
         pos_weight=1.0,  # how much more to weight the positive labels in the masks
         plot_val_samples=True,
@@ -226,7 +226,7 @@ def plot_training_history(history, metrics=['loss', 'patch_acc', 'patch_f1']):
 def predict_on_test_set(
     model, 
     implicit_class_labels=None, 
-    resize_shape=(384, 384), 
+    resize_shape=(400, 400), 
     normalize=False,
     submission_fn='submission.csv',
     ):
