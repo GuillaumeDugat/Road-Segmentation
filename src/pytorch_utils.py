@@ -125,7 +125,7 @@ def patch_f1_fn(y_hat, y):
     patches_hat = patches_hat.cpu().numpy().astype(int).flatten()
     patches = patches.cpu().numpy().astype(int).flatten()
 
-    return f1_score(patches, patches_hat)
+    return f1_score(patches, patches_hat, average="weighted")
 
 
 # Trains the given model with the given filenames for the satellite images and masks
