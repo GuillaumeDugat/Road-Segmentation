@@ -2,8 +2,8 @@
 ## Kaggle Team: WeNeedANameHere
 
 ### Setup:
-* TODO: Explain Python setup.
-* Place the training and test folders of the dataset into the same directory as the Python notebooks.
+* Since we only use the standard Python packages for ML/DL and no exotic packages or other installations, we assume that the reader already has a Python setup that is able to run our notebooks.
+* Simply place the training and test folders of the dataset into the same directory as the Python notebooks.
 
 ### Notes:
 * Almost all of the main code is located in the *src* directory in order to keep the notebooks as clean, minimal and comprehensible as possible. 
@@ -13,5 +13,5 @@
 ### Notebooks:
 * **augmentation_experiments.ipynb**: This notebook visualizes the dataset augmentation methods we use in other notebooks, such as flips, rotations, reflection paddings and color jitters. The main purpose of this notebook is to experiment with different parameters.
 * **unet_baseline.ipynb**: In this notebook, we take the U-Net baseline model from tutorial 10 as a starting point and build upon it by introducing and evaluating one improvement after the other.
-* **resnet_unet.ipynb**: We conduct experiments on a U-Net model where the down-sampling encoder is replaced by the ResNet-18 model.
+* **resnet_unet.ipynb**: We conduct experiments on a U-Net model where the down-sampling encoder is replaced by different ResNet models.
 * **class_specific_models.ipynb**: In this approach, we use image embeddings and K-means clustering to assign implicit class labels to each sample of the given dataset. We then train a separate model for each implicit class.
