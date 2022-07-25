@@ -106,7 +106,7 @@ class ResNet18UNet(nn.Module):
 
 
 class ResNet50UNet(nn.Module):
-    def __init__(self, pretrained=False, freeze=False):
+    def __init__(self, pretrained=False, freeze=False, extra_conv_layers=False):
         super().__init__()
         
         self.freeze = freeze
@@ -122,6 +122,8 @@ class ResNet50UNet(nn.Module):
             for param in self.resnet.parameters():
                 param.requires_grad = False
         
+        self.extra_conv_layers = extra_conv_layers
+
         # Override the final layers
         self.resnet.avgpool = nn.Identity()
         self.resnet.fc = nn.Identity()
@@ -131,10 +133,13 @@ class ResNet50UNet(nn.Module):
         self.conv3 = nn.Conv2d(512, 256, kernel_size=3, padding=1)
         self.conv4 = nn.Conv2d(256, 128, kernel_size=3, padding=1)
         self.conv5 = nn.Conv2d(128, 64, kernel_size=3, padding=1)
-        #self.conv6 = nn.Conv2d(64, 32, kernel_size=3, padding=1)
-        #self.conv7 = nn.Conv2d(32, 16, kernel_size=3, padding=1)
-        #self.conv_out = nn.Conv2d(16, 1, kernel_size=3, padding=1)
-        self.conv_out = nn.Conv2d(64, 1, kernel_size=3, padding=1)
+
+        if self.extra_conv_layers:
+            self.conv6 = nn.Conv2d(64, 32, kernel_size=3, padding=1)
+            self.conv7 = nn.Conv2d(32, 16, kernel_size=3, padding=1)
+            self.conv_out = nn.Conv2d(16, 1, kernel_size=3, padding=1)
+        else:
+            self.conv_out = nn.Conv2d(64, 1, kernel_size=3, padding=1)
         self.up = nn.Upsample(scale_factor=2, mode='nearest')
         self.relu = nn.ReLU(inplace=True)
         
@@ -157,8 +162,78 @@ class ResNet50UNet(nn.Module):
         x = self.up(self.relu(self.conv3(x))) + x1
         x = self.up(self.relu(self.conv4(x)))
         x = self.up(self.relu(self.conv5(x)))
-        #x = self.relu(self.conv6(x)) # no upsampling anymore, already at original input size!
-        #x = self.relu(self.conv7(x))
+
+        if self.extra_conv_layers:
+            x = self.relu(self.conv6(x)) # no upsampling anymore, already at original input size!
+            x = self.relu(self.conv7(x))
+
+        x = self.conv_out(x)
+
+        return x
+
+
+class ResNet152UNet(nn.Module):
+    def __init__(self, pretrained=False, freeze=False, extra_conv_layers=False):
+        super().__init__()
+        
+        self.freeze = freeze
+        if freeze:
+            assert pretrained
+        
+        if pretrained:
+            self.resnet = torchvision.models.resnet152(weights=torchvision.models.ResNet152_Weights.DEFAULT)
+        else:
+            self.resnet = torchvision.models.resnet152()
+
+        if freeze:
+            for param in self.resnet.parameters():
+                param.requires_grad = False
+        
+        self.extra_conv_layers = extra_conv_layers
+
+        # Override the final layers
+        self.resnet.avgpool = nn.Identity()
+        self.resnet.fc = nn.Identity()
+        
+        self.conv1 = nn.Conv2d(2048, 1024, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(1024, 512, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(512, 256, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(256, 128, kernel_size=3, padding=1)
+        self.conv5 = nn.Conv2d(128, 64, kernel_size=3, padding=1)
+
+        if self.extra_conv_layers:
+            self.conv6 = nn.Conv2d(64, 32, kernel_size=3, padding=1)
+            self.conv7 = nn.Conv2d(32, 16, kernel_size=3, padding=1)
+            self.conv_out = nn.Conv2d(16, 1, kernel_size=3, padding=1)
+        else:
+            self.conv_out = nn.Conv2d(64, 1, kernel_size=3, padding=1)
+        self.up = nn.Upsample(scale_factor=2, mode='nearest')
+        self.relu = nn.ReLU(inplace=True)
+        
+    def forward(self, x):
+        if self.freeze:
+            self.resnet.eval()
+        
+        x = self.resnet.conv1(x)
+        x = self.resnet.bn1(x)
+        x = self.resnet.relu(x)
+        x = self.resnet.maxpool(x)
+
+        x1 = self.resnet.layer1(x)
+        x2 = self.resnet.layer2(x1)
+        x3 = self.resnet.layer3(x2)
+        x = self.resnet.layer4(x3)
+        
+        x = self.up(self.relu(self.conv1(x))) + x3
+        x = self.up(self.relu(self.conv2(x))) + x2
+        x = self.up(self.relu(self.conv3(x))) + x1
+        x = self.up(self.relu(self.conv4(x)))
+        x = self.up(self.relu(self.conv5(x)))
+
+        if self.extra_conv_layers:
+            x = self.relu(self.conv6(x)) # no upsampling anymore, already at original input size!
+            x = self.relu(self.conv7(x))
+            
         x = self.conv_out(x)
 
         return x
