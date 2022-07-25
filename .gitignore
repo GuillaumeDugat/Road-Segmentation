@@ -133,6 +133,8 @@ training/
 test/
 training_ext/
 training_ext_classes/
+training_google/
+large/
 
 # submissions
 submissions/
