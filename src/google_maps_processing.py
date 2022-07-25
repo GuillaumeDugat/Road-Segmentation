@@ -40,8 +40,8 @@ def process_images(
         filename_sat = sat_images[large_image]
         filename_seg = f"gmap_region_{region_index:02}{grid_index}_seg.png"
 
-        image_sat = Image.open(filename_sat, formats=["png"])
-        image_seg = Image.open(os.path.join("large", filename_seg), formats=["png"])
+        image_sat = Image.open(filename_sat)
+        image_seg = Image.open(os.path.join("large", filename_seg))
 
         for rot in other_rotations:
             rot_sat = image_sat.rotate(rot)
@@ -105,6 +105,10 @@ def process_images(
 
                     i = xiter + divisions*yoffset
 
+                    # convert from P mode to RGB/L
+                    partial_sat = partial_sat.convert('RGB')
+                    partial_seg = partial_seg.convert('L')
+
                     partial_sat.save(os.path.join(dir, "images", f"{region_index:02}{grid_index}0{rot:03}{i:02}_sat.png"))
                     partial_seg.save(os.path.join(dir, "groundtruth", f"{region_index:02}{grid_index}0{rot:03}{i:02}_seg.png"))
                     
@@ -131,6 +135,10 @@ def process_images(
                     partial_seg = rot_seg.crop(window_bounds)
 
                     i = xoffset + divisions*yoffset
+
+                    # convert from P mode to RGB/L
+                    partial_sat = partial_sat.convert('RGB')
+                    partial_seg = partial_seg.convert('L')
 
                     partial_sat.save(os.path.join(dir, "images", f"{region_index:02}{grid_index}0{rot:03}{i:02}_sat.png"))
                     partial_seg.save(os.path.join(dir, "groundtruth", f"{region_index:02}{grid_index}0{rot:03}{i:02}_seg.png"))
