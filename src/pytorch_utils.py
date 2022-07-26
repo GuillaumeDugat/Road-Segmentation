@@ -241,6 +241,7 @@ def predict_on_test_set(
     implicit_class_labels=None, 
     resize_shape=(400, 400), 
     normalize=False,
+    create_submission=True, # if false, only return predicted segmentation maps
     submission_fn='submission.csv',
     ):
 
@@ -273,10 +274,19 @@ def predict_on_test_set(
     test_pred= np.moveaxis(test_pred, 1, -1)  # CHW to HWC
     test_pred = np.stack([cv2.resize(img, dsize=(400, 400)) for img in test_pred], 0)  # resize to original shape
 
-    # now compute labels
-    labels = test_pred.reshape((-1, 400 // PATCH_SIZE, PATCH_SIZE, 400 // PATCH_SIZE, PATCH_SIZE))
-    labels = np.moveaxis(labels, 2, 3)
-    labels = np.round(np.mean(labels, (-1, -2)) > CUTOFF)
-    create_submission(labels, test_fns, submission_filename=submission_fn)
+    if create_submission:
+        labels = test_pred.reshape((-1, 400 // PATCH_SIZE, PATCH_SIZE, 400 // PATCH_SIZE, PATCH_SIZE))
+        labels = np.moveaxis(labels, 2, 3)
+        labels = np.round(np.mean(labels, (-1, -2)) > CUTOFF)
+        create_submission(labels, test_fns, submission_filename=submission_fn)
 
     return test_pred
+
+
+def compute_labels_and_create_submission(preds, submission_fn='submission.csv'):
+    labels = preds.reshape((-1, 400 // PATCH_SIZE, PATCH_SIZE, 400 // PATCH_SIZE, PATCH_SIZE))
+    labels = np.moveaxis(labels, 2, 3)
+    labels = np.round(np.mean(labels, (-1, -2)) > CUTOFF)
+
+    test_fns = sorted(glob(os.path.join("test", "images", "*.png")))
+    create_submission(labels, test_fns, submission_filename=submission_fn)

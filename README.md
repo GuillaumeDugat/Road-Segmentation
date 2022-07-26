@@ -18,4 +18,4 @@
 * **resnet_unet.ipynb**: We conduct experiments on a U-Net model where the down-sampling encoder is replaced by different ResNet models.
 * **class_specific_models.ipynb**: In this approach, we use image embeddings and K-means clustering to assign implicit class labels to each sample of the given dataset. We then train a separate model for each implicit class.
 * **google_maps_processing.ipynb**: This notebook generates many new samples from the downloaded Google Maps data by slicing the large images into smaller ones and applying rotations and flips.
-* **large_dataset_training.ipynb**: Here we use the additional Google Maps data to train our models with much larger datasets.
+* **large_dataset_training.ipynb**: Here we use the additional Google Maps data to train our models with much larger datasets. We first train the model on our new dataset and then finetune it with the original dataset.
