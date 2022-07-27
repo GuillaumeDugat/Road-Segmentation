@@ -241,7 +241,7 @@ def predict_on_test_set(
     implicit_class_labels=None, 
     resize_shape=(400, 400), 
     normalize=False,
-    create_submission=True, # if false, only return predicted segmentation maps
+    make_submission=True, # if false, only return predicted segmentation maps
     submission_fn='submission.csv',
     ):
 
@@ -274,7 +274,7 @@ def predict_on_test_set(
     test_pred= np.moveaxis(test_pred, 1, -1)  # CHW to HWC
     test_pred = np.stack([cv2.resize(img, dsize=(400, 400)) for img in test_pred], 0)  # resize to original shape
 
-    if create_submission:
+    if make_submission:
         labels = test_pred.reshape((-1, 400 // PATCH_SIZE, PATCH_SIZE, 400 // PATCH_SIZE, PATCH_SIZE))
         labels = np.moveaxis(labels, 2, 3)
         labels = np.round(np.mean(labels, (-1, -2)) > CUTOFF)
