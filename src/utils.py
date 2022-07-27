@@ -6,6 +6,10 @@ from glob import glob
 from PIL import Image
 
 
+PATCH_SIZE = 16  # pixels per side of square patches
+CUTOFF = 0.25  # minimum average brightness for a mask patch to be classified as containing road
+
+
 # Returns a specific image from the given path as a numpy array.
 # Satellite images have shape (H, W, 3) and masks have shape (H, W).
 # All pixel values are in the interval [0.0, 1.0].
@@ -72,3 +76,27 @@ def create_submission(labels, test_filenames, submission_filename):
                     f.write("{:03d}_{}_{},{}\n".format(img_number, j * 16, i * 16, int(patch_array[i, j])))
     
     print(f"Created submission file: {path}")
+
+# takes in a 4D np.array containing images and (optionally) a 4D np.array containing the segmentation masks
+# returns a 4D np.array with an ordered sequence of patches extracted from the image and (optionally) a np.array containing labels
+def image_to_patches(images, masks=None):
+    n_images = images.shape[0]  # number of images
+    h, w = images.shape[1:3]  # shape of images
+    assert (h % PATCH_SIZE) + (w % PATCH_SIZE) == 0  # make sure images can be patched exactly
+
+    images = images[:,:,:,:3]
+    
+    h_patches = h // PATCH_SIZE
+    w_patches = w // PATCH_SIZE
+    
+    patches = images.reshape((n_images, h_patches, PATCH_SIZE, w_patches, PATCH_SIZE, -1))
+    patches = np.moveaxis(patches, 2, 3)
+    patches = patches.reshape(-1, PATCH_SIZE, PATCH_SIZE, 3)
+    if masks is None:
+        return patches
+
+    masks = masks.reshape((n_images, h_patches, PATCH_SIZE, w_patches, PATCH_SIZE, -1))
+    masks = np.moveaxis(masks, 2, 3)
+    labels = np.mean(masks, (-1, -2, -3)) > CUTOFF  # compute labels
+    labels = labels.reshape(-1).astype(np.float32)
+    return patches, labels

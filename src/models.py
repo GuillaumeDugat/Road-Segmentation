@@ -237,3 +237,31 @@ class ResNet152UNet(nn.Module):
         x = self.conv_out(x)
 
         return x
+
+class PatchCNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(16)
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(32)
+        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(64)
+        self.max_pool = nn.MaxPool2d(2, 2)
+        self.relu = nn.ReLU()
+        self.flatten = nn.Flatten()
+        self.dropout1 = nn.Dropout(0.5)
+        self.lin1 = nn.Linear(256, 10)
+        self.dropout2 = nn.Dropout(0.5)
+        self.lin2 = nn.Linear(10, 1)
+
+    def forward(self, x):
+        x = self.bn1(self.max_pool(self.relu(self.conv1(x))))
+        x = self.bn2(self.max_pool(self.relu(self.conv2(x))))
+        x = self.bn3(self.max_pool(self.relu(self.conv3(x))))
+        x = self.dropout1(x)
+        x = self.flatten(x)
+        x = self.relu(self.lin1(x))
+        x = self.dropout2(x)
+        x = self.lin2(x)
+        return x
