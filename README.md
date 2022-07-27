@@ -1,5 +1,10 @@
-# CIL Road Segmentation
+# CIL Road Segmentation Project
 ## Kaggle Team: WeNeedANameHere
+### Team Members:
+* Gianluca Danieletto
+* Guillaume Dugat
+* Felix Yang
+* Daiwei Zhang
 
 ### Setup:
 * Since we only use the standard Python packages for ML/DL and no exotic packages or other installations, we simply assume that the reader already has a Python setup that is able to run our notebooks.
@@ -18,4 +23,4 @@
 * **resnet_unet.ipynb**: We conduct experiments on a U-Net model where the down-sampling encoder is replaced by different ResNet models.
 * **class_specific_models.ipynb**: In this approach, we use image embeddings and K-means clustering to assign implicit class labels to each sample of the given dataset. We then train a separate model for each implicit class.
 * **google_maps_processing.ipynb**: This notebook generates many new samples from the downloaded Google Maps data by slicing the large images into smaller ones and applying rotations and flips.
-* **large_dataset_training.ipynb**: Here we use the additional Google Maps data to train our models with much larger datasets. We first train the model on our new dataset and then finetune it with the original dataset.
+* **large_dataset_training.ipynb**: Here we use additional Google Maps data to train our models with much larger datasets. We first train the model on our new dataset and then finetune it with the original dataset. We also apply morphological operations for post-processing.
