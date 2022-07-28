@@ -13,7 +13,7 @@ import torchvision.transforms.functional as TF
 
 from sklearn.metrics import f1_score
 
-from src.utils import load_image, create_submission
+from src_notebooks.utils import load_image, create_submission
 
 
 PATCH_SIZE = 16  # pixels per side of square patches
