@@ -80,23 +80,24 @@ class ImageDataset(torch.utils.data.Dataset):
 
 # Dataset class that deals with loading the patches data.
 class PatchImageDataset(torch.utils.data.Dataset):
-    def __init__(self, image_fns, mask_fns=None, device='cpu', resize_to=(PATCH_SIZE, PATCH_SIZE), normalize=False):
+    def __init__(self, image_fns, have_output=True, device='cpu', resize_to=(PATCH_SIZE, PATCH_SIZE), normalize=False):
         self.image_fns = image_fns
-        self.mask_fns = mask_fns
+        self.have_output = have_output
         self.device = device
         self.resize_to = resize_to
         self.resize = (self.resize_to != (PATCH_SIZE, PATCH_SIZE))
         self.normalize = normalize
         self.n_samples = len(image_fns)
-        self.h_patches = H_PATCHES
-        self.w_patches = W_PATCHES
 
     def _normalize(self, img):
         tensor = TF.to_tensor(img) # tensor has shape (3, H, W) now!
         mean = tensor.mean([1,2])
         std = tensor.std([1,2])
 
-        return TF.normalize(tensor, mean=mean, std=std)
+        try:
+            return TF.normalize(tensor, mean=mean, std=std)
+        except ValueError: # happens when std is [0, 0, 0] (which is the case on certain patches)
+            return tensor
     
     def _to_device(self, img):
         if self.device == 'cpu':
@@ -105,47 +106,28 @@ class PatchImageDataset(torch.utils.data.Dataset):
             return img.contiguous().pin_memory().to(device=self.device, non_blocking=True)
 
     def __getitem__(self, item):
-        item, idx = (
-            item // (self.h_patches * self.w_patches),
-            item % (self.h_patches * self.w_patches),
-        )
-
         x = load_image(self.image_fns[item])
         
-        x = cv2.resize(x, dsize=(400, 400))
-        x = np.expand_dims(x, axis=0)
-        
-        # if training/validation set
-        if self.mask_fns is not None:
-            y = load_image(self.mask_fns[item])
-            y = np.expand_dims(y, axis=0)
-            patches, labels = image_to_patches(x, masks=y)
-        # if test set:
-        else:
-            patches = image_to_patches(x)
-
-        x = patches[idx]
-
         if self.resize:
-            x = cv2.resize(x, dsize=self.resize_to)              
+            x = cv2.resize(x, dsize=self.resize_to)                
         
         if self.normalize:
             x = self._normalize(x) # x is a tensor now with shape (3, H, W)
         else:
             x = TF.to_tensor(x) # this also transorms x to a tensor with shape (3, H, W)
-    
+        
         # if training/validation set
-        if self.mask_fns is not None:
-            y = labels[idx]
+        if self.have_output:
+            y = float("-1"in self.image_fns[item])
             y = np.array([y])
             y = torch.from_numpy(y)
             return self._to_device(x), self._to_device(y)
         # if test set:
         else:
             return self._to_device(x)
-    
+
     def __len__(self):
-        return self.n_samples * self.h_patches * self.w_patches
+        return self.n_samples
 
 
 def show_val_samples(x, y, y_hat, segmentation=False):
@@ -234,8 +216,8 @@ def train_model(
         val_dataset = ImageDataset(image_fns_val, mask_fns=mask_fns_val, device=device, resize_to=resize_shape, normalize=normalize)
     else:
         if resize_shape is None: resize_shape = (PATCH_SIZE, PATCH_SIZE)
-        train_dataset = PatchImageDataset(image_fns_train, mask_fns=mask_fns_train, device=device, resize_to=resize_shape, normalize=normalize)
-        val_dataset = PatchImageDataset(image_fns_val, mask_fns=mask_fns_val, device=device, resize_to=resize_shape, normalize=normalize)
+        train_dataset = PatchImageDataset(image_fns_train, have_output=True, device=device, resize_to=resize_shape, normalize=normalize)
+        val_dataset = PatchImageDataset(image_fns_val, have_output=True, device=device, resize_to=resize_shape, normalize=normalize)
 
     print(f"Number of training samples:\t{len(train_dataset)}")
     print(f"Number of validation samples:\t{len(val_dataset)}")
@@ -338,13 +320,14 @@ def predict_on_test_set(
     else:
         model.eval()
 
-    test_fns = sorted(glob(os.path.join("test", "images", "*.png")))
     if not use_patches:
+        test_fns = sorted(glob(os.path.join("test", "images", "*.png")))
         if resize_shape is None: resize_shape = (400, 400)
         test_dataset = ImageDataset(test_fns, device=device, resize_to=resize_shape, normalize=normalize)
     else:
+        test_fns = sorted(glob(os.path.join("test_patch", "images", "*.png")))
         if resize_shape is None: resize_shape = (PATCH_SIZE, PATCH_SIZE)
-        test_dataset = PatchImageDataset(test_fns, device=device, resize_to=resize_shape, normalize=normalize)
+        test_dataset = PatchImageDataset(test_fns, have_output=False, device=device, resize_to=resize_shape, normalize=normalize)
 
     sigmoid = nn.Sigmoid() # we need to manually apply the sigmoid function because it is not included in the models themselves,
                            # that's because the BCEWithLogitsLoss already applies the sigmoid function internally
@@ -372,6 +355,7 @@ def predict_on_test_set(
     elif submission_bool:
         labels = test_pred.reshape((-1, 400 // PATCH_SIZE, 400 // PATCH_SIZE)) 
         labels = np.round(labels)
+        test_fns = sorted(glob(os.path.join("test", "images", "*.png")))
         create_submission(labels, test_fns, submission_filename=submission_fn)
 
     return test_pred

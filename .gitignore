@@ -135,6 +135,9 @@ training_ext/
 training_ext_classes/
 training_google/
 large/
+training_patch
+test_patch
+training_ext_patch
 
 # submissions
 submissions/

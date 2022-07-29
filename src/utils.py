@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import numpy as np
 import matplotlib.pyplot as plt
@@ -100,3 +101,58 @@ def image_to_patches(images, masks=None):
     labels = np.mean(masks, (-1, -2, -3)) > CUTOFF  # compute labels
     labels = labels.reshape(-1).astype(np.float32)
     return patches, labels
+
+# Create a dataset with the patches to accelerate dataloading in training
+def create_patch_dataset_training(
+    imgs, 
+    masks,
+    class_label=None, # optional implicit class label 
+    dir="training_patch", # directory name of the new extended dataset
+    ):
+    
+    # create directories for extended dataset
+    os.makedirs(dir, exist_ok=True)
+    os.makedirs(os.path.join(dir, "images"), exist_ok=True)
+
+    patches, labels = image_to_patches(imgs, masks=masks)
+
+    counter = 0
+    num_images = len(patches)
+    for (patch, label) in zip(patches, labels):
+        # save image and mask
+        counter_str = str(counter).zfill(5)
+        fn = f"{counter_str}-{int(label)}.png" if class_label is None else f"{class_label}_{counter_str}-{int(label)}.png"
+        patch = Image.fromarray((255 * patch).astype(np.uint8))
+        patch.save(os.path.join(dir, "images", fn))
+
+        counter += 1
+        sys.stdout.write(f"\rImage {counter}/{num_images}")
+
+    print("")
+
+# Create a dataset with the patches to accelerate dataloading in training
+def create_patch_dataset_test(
+    tests_imgs,
+    class_label=None, # optional implicit class label 
+    dir="test_patch", # directory name of the new extended dataset
+    ):
+
+    # create directories for extended dataset
+    os.makedirs(dir, exist_ok=True)
+    os.makedirs(os.path.join(dir, "images"), exist_ok=True)
+
+    patches = image_to_patches(tests_imgs, masks=None)
+
+    counter = 0
+    num_images = len(patches)
+    for patch in patches:
+        # save image and mask
+        counter_str = str(counter).zfill(5)
+        num_img = 144 + (counter // 625)
+        fn = f"{num_img}-{counter_str}.png" if class_label is None else f"{class_label}_{num_img}-{counter_str}.png"
+        patch = Image.fromarray((255 * patch).astype(np.uint8))
+        patch.save(os.path.join(dir, "images", fn))
+        counter += 1
+        sys.stdout.write(f"\rImage {counter}/{num_images}")
+
+    print("")
