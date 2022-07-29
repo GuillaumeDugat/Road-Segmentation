@@ -284,7 +284,7 @@ class DilatedResBlock(nn.Module):
         return self.block(x) + self.skip(x)
 
 
-class DilatedResNet18UNet(nn.Module):
+class ResNet18UNet_DilatedResBlocks(nn.Module):
     # Replace each of the two last layers of the encoder with two blocks of DilatedResBlock
     def __init__(self, pretrained=False, freeze=False):
         super().__init__()
@@ -319,7 +319,6 @@ class DilatedResNet18UNet(nn.Module):
         self.conv_out = nn.Conv2d(16, 1, kernel_size=3, padding=1) # 384 -> 384
         self.up = nn.Upsample(scale_factor=2, mode='nearest')
         self.relu = nn.ReLU(inplace=True)
-        self.head = nn.Sigmoid()
       
     def forward(self, x):
         if self.freeze:
@@ -345,12 +344,11 @@ class DilatedResNet18UNet(nn.Module):
         x = self.up(self.relu(self.conv5(x))) # 192x192x32 -> 384x384x16
 
         x = self.conv_out(x)
-        x = self.head(x)
         return x
 
 
 class DilatedBottleneck(nn.Module):
-    # a repeating structure composed of convolutional layers which are all summed up at the output
+    # A repeating structure composed of convolutional layers which are all summed up at the output
     def __init__(self, nb_channels, nb_blocks):
         super().__init__()
         self.blocks = nn.ModuleList([
@@ -368,7 +366,7 @@ class DilatedBottleneck(nn.Module):
         return res
 
 
-class DilatedResNet18UNetv2(nn.Module):
+class ResNet18UNet_DilatedResBottleneck(nn.Module):
     # Replace the two last layers of the encoder with a DilatedBottleneck
     def __init__(self, pretrained=False, freeze=False, nb_dilated_blocks=3):
         super().__init__()
@@ -397,7 +395,6 @@ class DilatedResNet18UNetv2(nn.Module):
         self.conv_out = nn.Conv2d(16, 1, kernel_size=3, padding=1) # 384 -> 384
         self.up = nn.Upsample(scale_factor=2, mode='nearest')
         self.relu = nn.ReLU(inplace=True)
-        self.head = nn.Sigmoid()
         
     def forward(self, x):
         if self.freeze:
@@ -418,5 +415,4 @@ class DilatedResNet18UNetv2(nn.Module):
         x = self.up(self.relu(self.conv3(x))) # 192x192x32 -> 224x224x16
 
         x = self.conv_out(x)
-        x = self.head(x)
         return x
