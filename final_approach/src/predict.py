@@ -32,6 +32,8 @@ import segmentation_models_pytorch as smp
 from mask_to_submission import get_submission
 from absl import app, flags
 
+EXPERIMENT_ID = 1658858769
+
 start = time.time()
 
 test_imgs = sorted(glob(os.path.join(C.CIL_DATA_DIR, "test", "images", "*.png")))
