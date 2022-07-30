@@ -18,7 +18,12 @@
 * If image normalization is applied as a preprocessing step, the validation images shown after each epoch will look weird due to clipping since the normalized values are outside the valid range of pixel values.
 
 ### Final Predictions:
-To reproduce the result from our best approach, TODO: @Daiwei
+To reproduce the result from our best approach (Res-U-Net-34, with external data and enhanced inference), please follow the below instructions to inference with our trained model.
+
+```bash
+git clone https://github.com/fyangch/cil-road-segmentation
+cd final_approach/src
+```
 
 ### Notebooks:
 * **augmentation_experiments.ipynb**: This notebook visualizes the dataset augmentation methods we use in other notebooks, such as flips, rotations, reflection paddings and color jitters. The main purpose of this notebook is to experiment with different parameters.
