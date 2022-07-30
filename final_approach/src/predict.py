@@ -34,7 +34,7 @@ from absl import app, flags
 
 start = time.time()
 
-test_imgs = sorted(glob(os.path.join(C.CIL_DATA_DIR, "test", "images", "satimage_*.png")))
+test_imgs = sorted(glob(os.path.join(C.CIL_DATA_DIR, "test", "images", "*.png")))
     
 test_transforms = Compose(
     [LoadImage(image_only=True),
