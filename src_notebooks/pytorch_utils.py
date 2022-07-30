@@ -17,6 +17,8 @@ from src_notebooks.utils import load_image, create_submission
 
 
 PATCH_SIZE = 16  # pixels per side of square patches
+H_PATCHES = 25  # number of patches on the height
+W_PATCHES = 25  # number of patches on the weight
 CUTOFF = 0.25  # minimum average brightness for a mask patch to be classified as containing road
 
 
@@ -68,6 +70,57 @@ class ImageDataset(torch.utils.data.Dataset):
                 y = cv2.resize(y, dsize=self.resize_to)
             y = TF.to_tensor(y)
 
+            return self._to_device(x), self._to_device(y)
+        # if test set:
+        else:
+            return self._to_device(x)
+
+    def __len__(self):
+        return self.n_samples
+
+# Dataset class that deals with loading the patches data.
+class PatchImageDataset(torch.utils.data.Dataset):
+    def __init__(self, image_fns, have_output=True, device='cpu', resize_to=(PATCH_SIZE, PATCH_SIZE), normalize=False):
+        self.image_fns = image_fns
+        self.have_output = have_output
+        self.device = device
+        self.resize_to = resize_to
+        self.resize = (self.resize_to != (PATCH_SIZE, PATCH_SIZE))
+        self.normalize = normalize
+        self.n_samples = len(image_fns)
+
+    def _normalize(self, img):
+        tensor = TF.to_tensor(img) # tensor has shape (3, H, W) now!
+        mean = tensor.mean([1,2])
+        std = tensor.std([1,2])
+
+        try:
+            return TF.normalize(tensor, mean=mean, std=std)
+        except ValueError: # happens when std is [0, 0, 0] (which is the case on certain patches)
+            return tensor
+    
+    def _to_device(self, img):
+        if self.device == 'cpu':
+            return img.cpu()
+        else:
+            return img.contiguous().pin_memory().to(device=self.device, non_blocking=True)
+
+    def __getitem__(self, item):
+        x = load_image(self.image_fns[item])
+        
+        if self.resize:
+            x = cv2.resize(x, dsize=self.resize_to)                
+        
+        if self.normalize:
+            x = self._normalize(x) # x is a tensor now with shape (3, H, W)
+        else:
+            x = TF.to_tensor(x) # this also transorms x to a tensor with shape (3, H, W)
+        
+        # if training/validation set
+        if self.have_output:
+            y = float("-1"in self.image_fns[item])
+            y = np.array([y])
+            y = torch.from_numpy(y)
             return self._to_device(x), self._to_device(y)
         # if test set:
         else:
@@ -148,16 +201,23 @@ def train_model(
         image_fns_val, mask_fns_val, 
         n_epochs=35,
         batch_size=4,
-        resize_shape=(400, 400),
+        resize_shape=None,  # different default values according to use_patches
         normalize=False,
         pos_weight=1.0,  # how much more to weight the positive labels in the masks
         plot_val_samples=True,
+        use_patches=False,
     ):
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    train_dataset = ImageDataset(image_fns_train, mask_fns=mask_fns_train, device=device, resize_to=resize_shape, normalize=normalize)
-    val_dataset = ImageDataset(image_fns_val, mask_fns=mask_fns_val, device=device, resize_to=resize_shape, normalize=normalize)
+    if not use_patches:
+        if resize_shape is None: resize_shape = (400, 400)
+        train_dataset = ImageDataset(image_fns_train, mask_fns=mask_fns_train, device=device, resize_to=resize_shape, normalize=normalize)
+        val_dataset = ImageDataset(image_fns_val, mask_fns=mask_fns_val, device=device, resize_to=resize_shape, normalize=normalize)
+    else:
+        if resize_shape is None: resize_shape = (PATCH_SIZE, PATCH_SIZE)
+        train_dataset = PatchImageDataset(image_fns_train, have_output=True, device=device, resize_to=resize_shape, normalize=normalize)
+        val_dataset = PatchImageDataset(image_fns_val, have_output=True, device=device, resize_to=resize_shape, normalize=normalize)
 
     print(f"Number of training samples:\t{len(train_dataset)}")
     print(f"Number of validation samples:\t{len(val_dataset)}")
@@ -165,7 +225,10 @@ def train_model(
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
-    metric_fns = {'acc': accuracy_fn, 'patch_acc': patch_accuracy_fn, 'patch_f1': patch_f1_fn}
+    if not use_patches:
+        metric_fns = {'acc': accuracy_fn, 'patch_acc': patch_accuracy_fn, 'patch_f1': patch_f1_fn}
+    else:
+        metric_fns = {'acc': accuracy_fn}
     optimizer = torch.optim.Adam(model.parameters())
     loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([pos_weight]).to(device))
     sigmoid = nn.Sigmoid() # we need to manually apply the sigmoid function after evaluating the loss because 
@@ -217,7 +280,7 @@ def train_model(
 
         print(' '.join(['\t- '+str(k)+' = '+str(v)+'\n ' for (k, v) in history[epoch].items()]))
 
-        if plot_val_samples:
+        if (not use_patches) and plot_val_samples:
             show_val_samples(x.detach().cpu().numpy(), y.detach().cpu().numpy(), y_hat.detach().cpu().numpy())
 
     print('Finished Training')
@@ -239,10 +302,11 @@ def plot_training_history(history, metrics=['loss', 'patch_f1']):
 def predict_on_test_set(
     model, 
     implicit_class_labels=None, 
-    resize_shape=(400, 400), 
+    resize_shape=None,  # different default values according to use_patches
     normalize=False,
     make_submission=True, # if false, only return predicted segmentation maps
     submission_fn='submission.csv',
+    use_patches=False,
     ):
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -256,14 +320,20 @@ def predict_on_test_set(
     else:
         model.eval()
 
-    test_fns = sorted(glob(os.path.join("test", "images", "*.png")))
-    test_dataset = ImageDataset(test_fns, device=device, resize_to=resize_shape, normalize=normalize)
+    if not use_patches:
+        test_fns = sorted(glob(os.path.join("test", "images", "*.png")))
+        if resize_shape is None: resize_shape = (400, 400)
+        test_dataset = ImageDataset(test_fns, device=device, resize_to=resize_shape, normalize=normalize)
+    else:
+        test_fns = sorted(glob(os.path.join("test_patch", "images", "*.png")))
+        if resize_shape is None: resize_shape = (PATCH_SIZE, PATCH_SIZE)
+        test_dataset = PatchImageDataset(test_fns, have_output=False, device=device, resize_to=resize_shape, normalize=normalize)
 
     sigmoid = nn.Sigmoid() # we need to manually apply the sigmoid function because it is not included in the models themselves,
                            # that's because the BCEWithLogitsLoss already applies the sigmoid function internally
                            
     test_pred = []
-    for i in range(len(test_fns)):
+    for i in tqdm(range(len(test_dataset))):
         if use_specialized_models:
             pred = model[implicit_class_labels[i]](test_dataset[i].unsqueeze(0))
         else:
@@ -271,13 +341,21 @@ def predict_on_test_set(
         test_pred.append(sigmoid(pred).detach().cpu().numpy())
 
     test_pred = np.concatenate(test_pred, 0)
-    test_pred= np.moveaxis(test_pred, 1, -1)  # CHW to HWC
-    test_pred = np.stack([cv2.resize(img, dsize=(400, 400)) for img in test_pred], 0)  # resize to original shape
 
-    if make_submission:
-        labels = test_pred.reshape((-1, 400 // PATCH_SIZE, PATCH_SIZE, 400 // PATCH_SIZE, PATCH_SIZE))
-        labels = np.moveaxis(labels, 2, 3)
-        labels = np.round(np.mean(labels, (-1, -2)) > CUTOFF)
+    if not use_patches:
+        test_pred = np.moveaxis(test_pred, 1, -1)  # CHW to HWC
+        test_pred = np.stack([cv2.resize(img, dsize=(400, 400)) for img in test_pred], 0)  # resize to original shape
+
+        if make_submission:
+            labels = test_pred.reshape((-1, 400 // PATCH_SIZE, PATCH_SIZE, 400 // PATCH_SIZE, PATCH_SIZE))
+            labels = np.moveaxis(labels, 2, 3)
+            labels = np.round(np.mean(labels, (-1, -2)) > CUTOFF)
+            create_submission(labels, test_fns, submission_filename=submission_fn)
+    
+    elif make_submission:
+        labels = test_pred.reshape((-1, 400 // PATCH_SIZE, 400 // PATCH_SIZE)) 
+        labels = np.round(labels)
+        test_fns = sorted(glob(os.path.join("test", "images", "*.png")))
         create_submission(labels, test_fns, submission_filename=submission_fn)
 
     return test_pred
