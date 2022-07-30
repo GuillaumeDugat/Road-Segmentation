@@ -6,6 +6,8 @@
 * Felix Yang
 * Daiwei Zhang
 
+This repository contains the code of the different approaches we used for project 3 of the course *Computational Intelligence Lab*.
+
 ### Setup:
 * TODO!!!
 * Place the training and test folders of the dataset into the same directory as the Python notebooks.
@@ -21,10 +23,10 @@ To reproduce the result from our best approach, TODO: @Daiwei
 
 ### Notebooks:
 * **augmentation_experiments.ipynb**: This notebook visualizes the dataset augmentation methods we use in other notebooks, such as flips, rotations, reflection paddings and color jitters. The main purpose of this notebook is to experiment with different parameters.
-* **patch_cnn_baseline.ipynb**: We evaluate the Patch CNN baseline model taken from tutorial 10, and show whether it gets better or not with some basical strategies.
+* **patch_cnn_baseline.ipynb**: We evaluate the Patch CNN baseline model taken from tutorial 10, and show whether it gets better or not with some basic strategies.
 * **unet_baseline.ipynb**: In this notebook, we take the U-Net baseline model from tutorial 10 as a starting point and build upon it by introducing and evaluating one improvement after the other.
 * **resnet_unet.ipynb**: We conduct experiments on a U-Net model where the down-sampling encoder is replaced by different ResNet models.
 * **class_specific_models.ipynb**: In this approach, we use image embeddings and K-means clustering to assign implicit class labels to each sample of the given dataset. We then train a separate model for each implicit class.
 * **google_maps_processing.ipynb**: This notebook generates many new samples from the downloaded Google Maps data by slicing the large images into smaller ones and applying rotations and flips.
 * **large_dataset_training.ipynb**: Here we use additional Google Maps data to train our models with much larger datasets. We first train the model on our new dataset and then finetune it with the original dataset. We also apply morphological operations for post-processing.
-* **dilation.ipynb**: Experiment the use of dilation in the bottleneck part of the models. We use two similar approaches.
+* **dilation.ipynb**: We experiment the use of dilation in the bottleneck part of the models. We use two similar approaches.
