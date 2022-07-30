@@ -9,7 +9,7 @@
 This repository contains the code of the different approaches we used for project 3 of the course *Computational Intelligence Lab*.
 
 ## Final Predictions:
-To reproduce the result from our best approach (Res-U-Net-34, with external data and enhanced inference), please carefully follow the below instructions to perform the inference:
+To reproduce the result from our best approach (Res-U-Net-34, with external data and enhanced inference, described in section II.F and III.F in our report), please carefully follow the below instructions to perform the inference:
 
 Please download [data.zip](https://drive.google.com/file/d/1jaS_45Bzl9lYbJIZk8_In0Ptu9Mf9p8Q/view?usp=sharing) and [experiment.zip](https://drive.google.com/file/d/1FyP_HDq0qAO2Tuekr8AZWLyOIDuDrMc7/view?usp=sharing).
 Unzip and move the two folders under `final_approach`.
