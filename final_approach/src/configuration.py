@@ -25,8 +25,8 @@ class Constants(object):
             self.CIL_DATA_DIR = "../data"
 
             # These data paths are for training purpose
-            self.MASS_DATA_DIR = "C:\Spring 2022\CIL\mass_data"
-            self.DEEPGLOBE_DATA_DIR = "C:\Spring 2022\CIL\deepglobe_data"
+            self.MASS_DATA_DIR = "../external_data/Mass"
+            self.DEEPGLOBE_DATA_DIR = "../external_data/DeepGlobe"
 
             self.EXPERIMENT_DIR = "../experiment"
 

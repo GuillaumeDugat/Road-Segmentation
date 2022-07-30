@@ -86,12 +86,12 @@ def main(config):
 
     post_transforms = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
 
-    dg_train_imgs = sorted(glob(os.path.join(C.DEEPGLOBE_DATA_DIR, "train", "images_new", "*.png")))
-    dg_train_segs = sorted(glob(os.path.join(C.DEEPGLOBE_DATA_DIR, "train", "groundtruth_new", "*.png")))
+    dg_train_imgs = sorted(glob(os.path.join(C.DEEPGLOBE_DATA_DIR, "images", "*.png")))
+    dg_train_segs = sorted(glob(os.path.join(C.DEEPGLOBE_DATA_DIR, "groundtruth", "*.png")))
     assert len(dg_train_imgs) == len(dg_train_segs)
 
-    mass_train_imgs = sorted(glob(os.path.join(C.MASS_DATA_DIR, "train", "images_new", "*.png")))
-    mass_train_segs = sorted(glob(os.path.join(C.MASS_DATA_DIR, "train", "groundtruth_new", "*.png")))
+    mass_train_imgs = sorted(glob(os.path.join(C.MASS_DATA_DIR, "images", "*.png")))
+    mass_train_segs = sorted(glob(os.path.join(C.MASS_DATA_DIR, "groundtruth", "*.png")))
     assert len(mass_train_imgs) == len(mass_train_segs)
 
     """Combine two external dataset"""
