@@ -9,12 +9,11 @@
 ### Setup:
 * TODO!!!
 * Place the training and test folders of the dataset into the same directory as the Python notebooks.
-* Go to the following link, download ***large.zip*** and place the unzipped folder into the same directory as the Python notebooks: https://drive.google.com/drive/folders/1GNzTsWcSkkLJfd1lcTLmzBma9KkU2oxH?usp=sharing
 
 ### Notes:
 * To keep the notebooks as clean, minimal and comprehensible as possible, we put almost all of the code into the *src_notebooks* directory.
 * We deleted some output cells that contained many images to keep the file sizes of the notebooks small (e.g. output cells that show validation samples after each training epoch or all predictions on the test set).
-* For completeness, we added the code for the retrieval of additional data using the Google Maps API (*src/google_maps_download.py*). However, to protect our API key and money, we ask the reader to download the pre-downloaded images from the Google Drive link above.
+* For completeness, we added the code for the retrieval of additional data using the Google Maps API (*src_notebooks/google_maps_download.py*). However, to protect our API key, we ask the reader to download the pre-downloaded images from the Google Drive link as described in the *google_maps_processing.ipynb* notebook *(not relevant for our final approach)*.
 * If image normalization is applied as a preprocessing step, the validation images shown after each epoch will look weird due to clipping since the normalized values are outside the valid range of pixel values.
 
 ### Final Predictions:
