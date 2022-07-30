@@ -56,8 +56,8 @@ the `submission.csv` that produces the score of 0.91648 will be written under th
 Note that a Pytorch installation with GPU/CUDA support is **required** for the prediction.
 
 #### File Overview
-* **src/predict.py**: runs the enhanced inference with the trained model stored in `experiment/[experiment ID]/model.pth`
-* **src/train.py**: train the model with external dataset (MA and DG). Please contact me if you need to run this script, since the post-processed external datasets are too large to include in this repo and the dataset path needs to be reconfigured.
+* `src/**predict.py**`: runs the enhanced inference with the trained model stored in `experiment/[experiment ID]/model.pth`
+* `src/train.py`: train the model with external dataset (MA and DG). Please contact me if you need to run this script, since the post-processed external datasets are too large to include in this repo and the dataset path needs to be reconfigured.
 * **src/configuration.py**: contains hyper-parameter and configuration setting.
 * **experiment/1658858769/model.pth**: our trained model.
 * **experiment/1658858769/config.json**: stores the hyper-parameters and configurations we used to train our best model.
