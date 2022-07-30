@@ -26,10 +26,23 @@ git clone https://github.com/fyangch/cil-road-segmentation
 cd final_approach
 ```
 
-If the `data` and `experiment` folders are not in this directories, please download from
+If the `data` and `experiment` folders are not in this directory, please download from
 [data.zip](https://drive.google.com/file/d/1jaS_45Bzl9lYbJIZk8_In0Ptu9Mf9p8Q/view?usp=sharing)
 and [experiment.zip](https://drive.google.com/file/d/1FyP_HDq0qAO2Tuekr8AZWLyOIDuDrMc7/view?usp=sharing).
 Unzip and move the two folders under `final_approach`.
+
+```bash
+cd src
+pip install -r requirements.txt
+python predict.py
+```
+
+will run the inference, which takes around 2 minutes on a NVIDIA RTX3080 GPU. 
+Note that a Pytorch installation with GPU/CUDA support is **required** for the prediction.
+
+#### File Overview
+* `src/predict.py`: 
+
 
 ### Notebooks:
 * **augmentation_experiments.ipynb**: This notebook visualizes the dataset augmentation methods we use in other notebooks, such as flips, rotations, reflection paddings and color jitters. The main purpose of this notebook is to experiment with different parameters.
