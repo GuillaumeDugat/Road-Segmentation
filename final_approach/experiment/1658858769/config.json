@@ -1,0 +1,17 @@
+{
+  "bs_cil_train": 1,
+  "bs_dg_train": 4,
+  "bs_eval": 1,
+  "bs_ext_train": 42,
+  "bs_mass_train": 3,
+  "data_workers": 4,
+  "early_stop_threshold": 4,
+  "eval_every": 1,
+  "lr": 8e-06,
+  "n_epochs": 500,
+  "n_val": 352,
+  "pre_train": null,
+  "pretrain_id": null,
+  "seed": 1658858769,
+  "tag": ""
+}

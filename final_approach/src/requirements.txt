@@ -1,0 +1,9 @@
+numpy
+matplotlib
+--extra-index-url https://download.pytorch.org/whl/cu113
+torch 
+torchvision
+monai
+segmentation-models-pytorch
+opencv-python
+absl-py
