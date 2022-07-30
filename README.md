@@ -36,7 +36,7 @@ Note that a Pytorch installation with GPU/CUDA support is **required** for the p
 * `experiment/1658858769/config.json`: stores the hyper-parameters and configurations we used to train our best model.
 * `data/test/images/`: contains the 144 original test images. Feel free to replace them with any aerial images in png format.
 * `data/test/prediction/`: running `predict.py` will generate 144 segmentation results in this directory. Make sure this directory exists before running the inference.
-* `external_data/`: this folder contain 5 sample images and the corresponding segmentations each for MA and DG datasets.
+* `external_data/`: this folder contains 5 sample images and their corresponding segmentations for MA and DG datasets each.
 * `submission.py`: our final submission with score 0.91648
 
 
