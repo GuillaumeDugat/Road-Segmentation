@@ -30,7 +30,7 @@ Note that a Pytorch installation with GPU/CUDA support is **required** for the p
 
 ### File Overview
 * `src/predict.py`: runs the enhanced inference with the trained model stored in `experiment/[experiment ID]/model.pth`
-* `src/train.py`: train the model with external dataset (MA and DG). Please contact me if you need to run this script, since the post-processed external datasets are too large to include in our submission.
+* `src/train.py`: trains the model with external datasets (MA and DG). The training takes several days and the post-processed external datasets are too large for an upload to Google Drive. Please contact daizhang@student.ethz.ch if you need to run this script.
 * `src/configuration.py`: contains hyper-parameter and configuration setting.
 * `experiment/1658858769/model.pth`: our trained model.
 * `experiment/1658858769/config.json`: stores the hyper-parameters and configurations we used to train our best model.
@@ -58,3 +58,4 @@ Note that a Pytorch installation with GPU/CUDA support is **required** for the p
 * `google_maps_processing.ipynb`: This notebook generates many new samples from the downloaded Google Maps data by slicing the large images into smaller ones and applying rotations and flips.
 * `large_dataset_training.ipynb`: Here we use additional Google Maps data to train our models with much larger datasets. We first train the model on our new dataset and then finetune it with the original dataset. We also apply morphological operations for post-processing.
 * `dilation.ipynb`: We experiment the use of dilation in the bottleneck part of the models. We use two similar approaches.
+* `styletransfer_experiments.iypnb`: We investigage how style transfer could be applied to generate new training samples.
