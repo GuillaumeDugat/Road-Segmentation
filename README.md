@@ -1,14 +1,15 @@
 # CIL Road Segmentation Project
-## Kaggle Team: WeNeedANameHere
-### Team Members:
+
+The goal of the project is to train classifiers to segment roads in satellite images. This repository contains the code of the different approaches we used. This project is part of the course *Computational Intelligence Lab* (given at ETH Zurich). Our final report is [provided here](CIL_Report.pdf).
+
+## :busts_in_silhouette: Team Members
 * Gianluca Danieletto
 * Guillaume Dugat
 * Felix Yang
 * Daiwei Zhang
 
-This repository contains the code of the different approaches we used for project 3 of the course *Computational Intelligence Lab*.
 
-## Final Predictions:
+## :dart: Final Predictions
 To reproduce the result from our best approach (Res-U-Net-34, with external data and enhanced inference, described in section II.F and III.F in our report), please carefully follow the below instructions to perform the inference:
 
 Please download [data.zip](https://drive.google.com/file/d/1jaS_45Bzl9lYbJIZk8_In0Ptu9Mf9p8Q/view?usp=sharing) and [experiment.zip](https://drive.google.com/file/d/1FyP_HDq0qAO2Tuekr8AZWLyOIDuDrMc7/view?usp=sharing).
@@ -28,7 +29,7 @@ All predicted binary maps will be written under the folder `data/test/prediction
 the `submission.csv` that produces the score of 0.91648 will be written under the `final_approach` home directory.
 Note that a Pytorch installation with GPU/CUDA support is **required** for the prediction.
 
-### File Overview
+## :microscope: File Overview
 * `src/predict.py`: runs the enhanced inference with the trained model stored in `experiment/[experiment ID]/model.pth`
 * `src/train.py`: trains the model with external datasets (MA and DG). The training takes several days and the post-processed external datasets are too large for an upload to Google Drive. Please contact daizhang@student.ethz.ch if you need to run this script.
 * `src/configuration.py`: contains hyper-parameter and configuration setting.
@@ -40,16 +41,16 @@ Note that a Pytorch installation with GPU/CUDA support is **required** for the p
 * `submission.py`: our final submission with score 0.91648
 
 
-## Notebooks:
+## :notebook: Notebooks
 **To run the notebook from our other approaches, place the training and test folders of the dataset into the same directory as the Python notebooks.**
 
-### Notes:
+## :newspaper: Notes
 * To keep the notebooks as clean, minimal and comprehensible as possible, we put almost all of the code into the `src_notebooks` directory.
 * We deleted some output cells that contained many images to keep the file sizes of the notebooks small (e.g. output cells that show validation samples after each training epoch).
 * For completeness, we added the code for the retrieval of additional data using the Google Maps API (`src_notebooks/google_maps_download.py`). However, to protect our API key, we ask the reader to download the pre-downloaded images from the Google Drive link as described in the `google_maps_processing.ipynb` notebook *(not relevant for our final approach)*.
 * If image normalization is applied as a preprocessing step, the validation images shown after each epoch will look weird due to clipping since the normalized values are outside the valid range of pixel values.
 
-### Overview:
+## :mag: Overview:
 * `augmentation_experiments.ipynb`: This notebook visualizes the dataset augmentation methods we use in other notebooks, such as flips, rotations, reflection paddings and color jitters. The main purpose of this notebook is to experiment with different parameters.
 * `patch_cnn_baseline.ipynb`: We evaluate the Patch CNN baseline model taken from tutorial 10, and show whether it gets better or not with some basic strategies.
 * `unet_baseline.ipynb`: In this notebook, we take the U-Net baseline model from tutorial 10 as a starting point and build upon it by introducing and evaluating one improvement after the other.
