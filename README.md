@@ -1,4 +1,4 @@
-# CIL Road Segmentation Project
+# Road Segmentation Project
 
 The goal of the project is to train classifiers to segment roads in satellite images. This repository contains the code of the different approaches we used. This project is part of the course *Computational Intelligence Lab* (given at ETH Zurich). Our final report is [provided here](CIL_Report.pdf).
 
